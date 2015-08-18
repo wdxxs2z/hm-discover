@@ -18,16 +18,22 @@ public class TaskStateServer implements Runnable {
 	
 	private ListOperations<String, Object> operations;
 	
-	public TaskStateServer(Marathon marathon, RedisTemplate<String, Object> redisTemplate) {
+	private String routerMatch;
+	
+	private Integer taskTime;
+	
+	public TaskStateServer(Marathon marathon, RedisTemplate<String, Object> redisTemplate, String routerMatch, Integer taskTime) {
 		this.redisTemplate = redisTemplate;
 		this.operations = redisTemplate.opsForList();
+		this.routerMatch = routerMatch;
+		this.taskTime = taskTime;
 	}
 
 	@Override
 	public void run() {
 		while(true){
 			try {
-				Set<String> keys = redisTemplate.keys("*");
+				Set<String> keys = redisTemplate.keys(routerMatch);
 				for (String key : keys) {
 					List<Object> range = operations.range(key, 0, -1);
 					if (range.size()!=0) {
@@ -48,7 +54,7 @@ public class TaskStateServer implements Runnable {
 						}
 					}
 				}
-				Thread.sleep(5000);
+				Thread.sleep(taskTime);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

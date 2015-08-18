@@ -22,6 +22,12 @@ public class AppStateServer implements Runnable{
 	
 	private RedisTemplate<String,Object> redisTemplate;
 	
+	private Integer appStateTime;
+	
+	private String prefix;
+	
+	private String domain;
+	
 	public RedisTemplate<String, Object> getRedisTemplate() {
 		return redisTemplate;
 	}
@@ -32,10 +38,13 @@ public class AppStateServer implements Runnable{
 
 	private ListOperations<String, Object> operations;
 	
-	public AppStateServer(Marathon marathon, RedisTemplate<String,Object> redisTemplate) {
+	public AppStateServer(Marathon marathon, RedisTemplate<String,Object> redisTemplate, Integer appStateTime, String prefix, String domain) {
 		this.marathon = marathon;
 		this.redisTemplate = redisTemplate;
 		this.operations = redisTemplate.opsForList();
+		this.appStateTime = appStateTime;
+		this.prefix = prefix;
+		this.domain = domain;
 	}
 
 	@Override
@@ -47,7 +56,7 @@ public class AppStateServer implements Runnable{
 				for(App app : appList) {
 					GetAppTasksResponse tasksResponse = marathon.getAppTasks(app.getId());
 					Collection<Task> tasks = tasksResponse.getTasks();
-					String key = "/rs" + app.getId() + ".fakedocker.com";
+					String key = prefix + app.getId() + domain;
 					List<Object> range = operations.range(key, 0, -1);
 					for (Task task : tasks) {
 						InetAddress remoteAddress = null;
@@ -65,7 +74,7 @@ public class AppStateServer implements Runnable{
 						}
 					}
 				}
-				Thread.sleep(5000);
+				Thread.sleep(appStateTime);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
