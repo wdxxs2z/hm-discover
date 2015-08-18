@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans:beans xmlns="http://www.springframework.org/schema/mvc"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd"> 
+   
+    <context:component-scan base-package="com.cloudpass.hm" />
+    
+    <beans:bean id="poolConfig" class="redis.clients.jedis.JedisPoolConfig">
+    	<beans:property name="maxIdle" value="5"></beans:property>
+    	<beans:property name="maxTotal" value="100"></beans:property>
+    	<beans:property name="minIdle" value="5"></beans:property>
+    	<beans:property name="testOnBorrow" value="true"></beans:property>
+    </beans:bean>
+     
+    <beans:bean id="redisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+    	<beans:property name="hostName" value="192.168.172.150"></beans:property>
+    	<beans:property name="port" value="6379"></beans:property>
+    	<beans:property name="password" value=""></beans:property>
+    	<beans:property name="poolConfig" ref="poolConfig"></beans:property>   
+    </beans:bean>
+
+    <beans:bean id="redisTemplate" class="org.springframework.data.redis.core.StringRedisTemplate">
+    	<beans:property name="connectionFactory" ref="redisConnectionFactory"></beans:property>
+    </beans:bean>
+       
+</beans:beans>
