@@ -4,7 +4,7 @@ This project is depend on marathon and gorouter
 > NOTE: 还没有实现组建高可用的部分，后续将继续完善
 > gorouter的版本是修改过的，采用redis做为其服务发现路由表
 
-# 安装单机版的mesos + docker + marathon + zookeeper
+安装单机版的mesos + docker + marathon + zookeeper
 
 <pre>
 0.zookeeper 启动ZK
