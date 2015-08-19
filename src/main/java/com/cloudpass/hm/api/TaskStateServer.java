@@ -22,11 +22,14 @@ public class TaskStateServer implements Runnable {
 	
 	private Integer taskTime;
 	
-	public TaskStateServer(Marathon marathon, RedisTemplate<String, Object> redisTemplate, String routerMatch, Integer taskTime) {
+	private String localhost;
+	
+	public TaskStateServer(Marathon marathon, RedisTemplate<String, Object> redisTemplate, String routerMatch, Integer taskTime, String localhost) {
 		this.redisTemplate = redisTemplate;
 		this.operations = redisTemplate.opsForList();
 		this.routerMatch = routerMatch;
 		this.taskTime = taskTime;
+		this.localhost = localhost;
 	}
 
 	@Override
@@ -40,16 +43,25 @@ public class TaskStateServer implements Runnable {
 						for (Object task : range) {
 							int i = 0;
 							String[] hostPort = task.toString().split(":");
+							
 							InetAddress remoteAddress = null;
 							try {
 								remoteAddress = InetAddress.getByName(hostPort[0]);
 							} catch (UnknownHostException e) {
 								
 							}
-							boolean reachable = HMUtil.isReachable(remoteAddress, Integer.parseInt(hostPort[1]), 500);
+							
+							InetAddress localhostAddress = null;
+							try {
+								localhostAddress = InetAddress.getByName(localhost);
+							} catch (UnknownHostException e) {
+								
+							}
+							
+							boolean reachable = HMUtil.isReachable(localhostAddress, remoteAddress, Integer.parseInt(hostPort[1]), 500);
 							if (reachable == false) {
 								operations.remove(key, i, task);
-							}
+							}					
 							i++;
 						}
 					}

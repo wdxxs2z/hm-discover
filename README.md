@@ -20,3 +20,7 @@ redis-server redis.conf
 5.gorouter 开启gorouter
 gorouter -c ./example_config/example.yml &
 </pre>
+
+AppState 接收并检测存活的app,这里只包含容器化带端口的应用服务，其它的将被抛弃
+TaskState 循环检测redis中的节点是否存活，如果没有，则将其清除
+Evacuator 检测空的无效的应用，并在redis中清除

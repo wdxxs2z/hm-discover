@@ -28,6 +28,8 @@ public class HealthManager {
 	private Integer taskTime;
 	
 	private Integer evaluateTime;
+	
+	private String localhost;
 
 	@SuppressWarnings("unchecked")
 	private void init() {
@@ -42,6 +44,7 @@ public class HealthManager {
 			appStateTime = Integer.parseInt(ConfigUtil.getProValue("env.properties", "env.marathon.appStateTime"));
 			taskTime = Integer.parseInt(ConfigUtil.getProValue("env.properties", "env.marathon.taskTime"));
 			evaluateTime = Integer.parseInt(ConfigUtil.getProValue("env.properties", "env.marathon.evaluateTime"));
+			localhost = ConfigUtil.getProValue("env.properties", "env.marathon.localhost");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		
@@ -49,9 +52,9 @@ public class HealthManager {
 	
 	public void hmService(){
 		init();
-		AppStateServer appStateServer = new AppStateServer(marathon, redisTemplate, appStateTime, prefix, domain);
+		AppStateServer appStateServer = new AppStateServer(marathon, redisTemplate, appStateTime, prefix, domain, localhost);
 		Thread appStateThread = new Thread(appStateServer, "appStateThread");
-		TaskStateServer taskStateServer = new TaskStateServer(marathon, redisTemplate, routerMatch, taskTime);
+		TaskStateServer taskStateServer = new TaskStateServer(marathon, redisTemplate, routerMatch, taskTime, localhost);
 		Thread taskStateThread = new Thread(taskStateServer, "taskStateThread");
 		EvacuatorServer evacuatorServer = new EvacuatorServer(marathon, redisTemplate, routerMatch, evaluateTime);
 		Thread evacuatorThread = new Thread(evacuatorServer, "evacuatorThread");
@@ -62,7 +65,7 @@ public class HealthManager {
 	}
 
 	public static void main(String[] args) {
-		new HealthManager().hmService();		
+		new HealthManager().hmService();
 	}
 
 }

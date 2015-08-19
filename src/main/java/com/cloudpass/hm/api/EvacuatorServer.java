@@ -36,7 +36,11 @@ public class EvacuatorServer implements Runnable {
 				if (appResponse != null) {
 					List<App> apps = appResponse.getApps();
 					for (App app : apps) {
-						appList.add(app.getId().replace("/", ""));
+						if (app.getContainer()!=null) {
+							if (app.getContainer().getDocker().getPortMappings()!=null) {
+								appList.add(app.getId().replace("/", ""));
+							}
+						}						
 					}
 					Set<String> keys = redisTemplate.keys("*");
 					for (String key : keys) {
