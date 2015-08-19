@@ -1,8 +1,8 @@
 # hm-discover
 This project is depend on marathon and gorouter
 
-> NOTE: 还没有实现组建高可用的部分，后续将继续完善
-> gorouter的版本是修改过的，采用redis做为其服务发现路由表
+> NOTE: 还没有实现组建高可用的部分，后续将继续完善<br />
+> gorouter的版本是修改过的，采用redis做为其服务发现路由表<br />
 
 安装单机版的mesos + docker + marathon + zookeeper
 
@@ -21,6 +21,8 @@ redis-server redis.conf
 gorouter -c ./example_config/example.yml &
 </pre>
 
-AppState 接收并检测存活的app,这里只包含容器化带端口的应用服务，其它的将被抛弃
-TaskState 循环检测redis中的节点是否存活，如果没有，则将其清除
-Evacuator 检测空的无效的应用，并在redis中清除
+AppState 接收并检测存活的app,这里只包含容器化带端口的应用服务，其它的将被抛弃<br />
+TaskState 循环检测redis中的节点是否存活，如果没有，则将其清除<br />
+Evacuator 检测空的无效的应用，并在redis中清除<br />
+
+Bug: task在检测的时候应该去匹配其中的healthchecks,不应该是ip:port. 后续修改
