@@ -1,16 +1,20 @@
 package com.cloudpass.hm.api;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 
-import com.cloudpass.hm.util.HMUtil;
-
 import mesosphere.marathon.client.Marathon;
+import mesosphere.marathon.client.model.v2.App;
+import mesosphere.marathon.client.model.v2.GetAppResponse;
+import mesosphere.marathon.client.model.v2.Task;
+import mesosphere.marathon.client.utils.MarathonException;
 
 public class TaskStateServer implements Runnable {
 	
@@ -22,14 +26,14 @@ public class TaskStateServer implements Runnable {
 	
 	private Integer taskTime;
 	
-	private String localhost;
+	private Marathon marathon;
 	
-	public TaskStateServer(Marathon marathon, RedisTemplate<String, Object> redisTemplate, String routerMatch, Integer taskTime, String localhost) {
+	public TaskStateServer(Marathon marathon, RedisTemplate<String, Object> redisTemplate, String routerMatch, Integer taskTime) {
 		this.redisTemplate = redisTemplate;
 		this.operations = redisTemplate.opsForList();
 		this.routerMatch = routerMatch;
 		this.taskTime = taskTime;
-		this.localhost = localhost;
+		this.marathon = marathon;
 	}
 
 	@Override
@@ -38,30 +42,39 @@ public class TaskStateServer implements Runnable {
 			try {
 				Set<String> keys = redisTemplate.keys(routerMatch);
 				for (String key : keys) {
+					
+					String appId = key.substring(key.lastIndexOf("/") + 1).split("\\.")[0];
+					Map<String,Boolean> isTaskAliave = new HashMap<String,Boolean>();
+					try {
+						GetAppResponse appResponse = marathon.getApp(appId);
+						App app = appResponse.getApp();
+						Iterator<Task> tasks = app.getTasks().iterator();
+						while(tasks.hasNext()) {
+							Task appTask = tasks.next();
+							String hostport = appTask.getHost() + ":" +appTask.getPorts().iterator().next();
+							Boolean isAlive = appTask.getHealthCheckResults().iterator().next().getAlive();
+							isTaskAliave.put(hostport, isAlive);
+						}
+					} catch (MarathonException e) {
+						redisTemplate.delete(key);
+					}
+					
 					List<Object> range = operations.range(key, 0, -1);
+					
 					if (range.size()!=0) {
+						
+						int i = 0;
+						
 						for (Object task : range) {
-							int i = 0;
-							String[] hostPort = task.toString().split(":");
 							
-							InetAddress remoteAddress = null;
-							try {
-								remoteAddress = InetAddress.getByName(hostPort[0]);
-							} catch (UnknownHostException e) {
-								
-							}
-							
-							InetAddress localhostAddress = null;
-							try {
-								localhostAddress = InetAddress.getByName(localhost);
-							} catch (UnknownHostException e) {
-								
-							}
-							
-							boolean reachable = HMUtil.isReachable(localhostAddress, remoteAddress, Integer.parseInt(hostPort[1]), 500);
-							if (reachable == false) {
+							if (isTaskAliave.containsKey(task)) {
+								if (isTaskAliave.get(task) == false) {
+									operations.remove(key, i, task);
+								}
+							}else{
 								operations.remove(key, i, task);
-							}					
+							}
+							
 							i++;
 						}
 					}

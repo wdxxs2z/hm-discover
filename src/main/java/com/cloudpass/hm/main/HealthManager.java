@@ -54,7 +54,7 @@ public class HealthManager {
 		init();
 		AppStateServer appStateServer = new AppStateServer(marathon, redisTemplate, appStateTime, prefix, domain, localhost);
 		Thread appStateThread = new Thread(appStateServer, "appStateThread");
-		TaskStateServer taskStateServer = new TaskStateServer(marathon, redisTemplate, routerMatch, taskTime, localhost);
+		TaskStateServer taskStateServer = new TaskStateServer(marathon, redisTemplate, routerMatch, taskTime);
 		Thread taskStateThread = new Thread(taskStateServer, "taskStateThread");
 		EvacuatorServer evacuatorServer = new EvacuatorServer(marathon, redisTemplate, routerMatch, evaluateTime);
 		Thread evacuatorThread = new Thread(evacuatorServer, "evacuatorThread");
