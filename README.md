@@ -26,3 +26,4 @@ TaskState 循环检测redis中的节点是否存活，如果没有，则将其�
 Evacuator 检测空的无效的应用，并在redis中清除<br />
 
 Bug: task在检测的时候应该去匹配其中的healthchecks,不应该是ip:port. 后续修改
+2015-08-20 修复task的bug,增加了marathon的健康检测功能。所有应用，只要带端口的都需要进行健康检测成功才能写入redis.
