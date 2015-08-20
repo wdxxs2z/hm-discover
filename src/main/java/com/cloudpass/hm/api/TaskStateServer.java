@@ -1,5 +1,6 @@
 package com.cloudpass.hm.api;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -12,6 +13,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import mesosphere.marathon.client.Marathon;
 import mesosphere.marathon.client.model.v2.App;
 import mesosphere.marathon.client.model.v2.GetAppResponse;
+import mesosphere.marathon.client.model.v2.HealthCheckResults;
 import mesosphere.marathon.client.model.v2.Task;
 import mesosphere.marathon.client.utils.MarathonException;
 
@@ -51,7 +53,11 @@ public class TaskStateServer implements Runnable {
 						while(tasks.hasNext()) {
 							Task appTask = tasks.next();
 							String hostport = appTask.getHost() + ":" +appTask.getPorts().iterator().next();
-							Boolean isAlive = appTask.getHealthCheckResults().iterator().next().getAlive();
+							Collection<HealthCheckResults> results = appTask.getHealthCheckResults();
+							Boolean isAlive = false;
+							if (results != null) {
+								isAlive = appTask.getHealthCheckResults().iterator().next().getAlive();
+							}
 							isTaskAliave.put(hostport, isAlive);
 						}
 					} catch (MarathonException e) {
