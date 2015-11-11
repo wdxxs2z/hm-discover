@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import mesosphere.marathon.client.Marathon;
 import mesosphere.marathon.client.model.v2.App;
 import mesosphere.marathon.client.model.v2.GetAppResponse;
+import mesosphere.marathon.client.model.v2.HealthCheck;
 import mesosphere.marathon.client.model.v2.HealthCheckResults;
 import mesosphere.marathon.client.model.v2.Task;
 import mesosphere.marathon.client.utils.MarathonException;
@@ -49,10 +50,23 @@ public class TaskStateServer implements Runnable {
 					try {
 						GetAppResponse appResponse = marathon.getApp(appId);
 						App app = appResponse.getApp();
+						
+						//add health check only http mode can add the routers.
+						Integer portIndex = null;
+						Collection<HealthCheck> healthChecks = app.getHealthChecks();
+						Iterator<HealthCheck> checks = healthChecks.iterator();
+						while (checks.hasNext()) {
+							HealthCheck check = checks.next();
+							if (check.getProtocol().equalsIgnoreCase("http") || check.getProtocol().equalsIgnoreCase("https")) {
+								portIndex = check.getPortIndex();
+								break;
+							}
+						}
+						
 						Iterator<Task> tasks = app.getTasks().iterator();
 						while(tasks.hasNext()) {
 							Task appTask = tasks.next();
-							String hostport = appTask.getHost() + ":" +appTask.getPorts().iterator().next();
+							String hostport = appTask.getHost() + ":" +appTask.getPorts().toArray()[portIndex];
 							Collection<HealthCheckResults> results = appTask.getHealthCheckResults();
 							Boolean isAlive = false;
 							if (results != null) {

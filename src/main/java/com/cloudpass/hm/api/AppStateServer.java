@@ -1,6 +1,7 @@
 package com.cloudpass.hm.api;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 import org.springframework.data.redis.core.ListOperations;
@@ -10,6 +11,7 @@ import mesosphere.marathon.client.Marathon;
 import mesosphere.marathon.client.model.v2.App;
 import mesosphere.marathon.client.model.v2.GetAppTasksResponse;
 import mesosphere.marathon.client.model.v2.GetAppsResponse;
+import mesosphere.marathon.client.model.v2.HealthCheck;
 import mesosphere.marathon.client.model.v2.HealthCheckResults;
 import mesosphere.marathon.client.model.v2.Task;
 
@@ -57,19 +59,34 @@ public class AppStateServer implements Runnable{
 							Collection<Task> tasks = tasksResponse.getTasks();
 							String key = prefix + app.getId() + domain;
 							List<Object> range = operations.range(key, 0, -1);
+							
+							//Add Health Check
+							Integer portIndex = null;
+							Collection<HealthCheck> healthChecks = app.getHealthChecks();
+							Iterator<HealthCheck> checks = healthChecks.iterator();
+							while (checks.hasNext()) {
+								HealthCheck check = checks.next();
+								if (check.getProtocol().equalsIgnoreCase("http") || check.getProtocol().equalsIgnoreCase("https")) {
+									portIndex = check.getPortIndex();
+									break;
+								}
+							}
+							
 							for (Task task : tasks) {
 								
 								Collection<HealthCheckResults> checkResults = task.getHealthCheckResults();
+							
 								if (checkResults != null) {
 									HealthCheckResults results = checkResults.iterator().next();
 									Boolean alive = results.getAlive();
 									if (alive){
-										String value = task.getHost().replace("/", "") + ":" + task.getPorts().iterator().next();
+										String value = task.getHost().replace("/", "") + ":" + task.getPorts().toArray()[portIndex];
 										if (!range.contains(value)) {
 											operations.leftPush(key, value);
 										}
 									}
 								}
+								
 							}
 						}
 					}				
