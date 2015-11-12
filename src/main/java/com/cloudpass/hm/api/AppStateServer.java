@@ -1,7 +1,6 @@
 package com.cloudpass.hm.api;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.springframework.data.redis.core.ListOperations;
@@ -12,7 +11,6 @@ import mesosphere.marathon.client.model.v2.App;
 import mesosphere.marathon.client.model.v2.GetAppTasksResponse;
 import mesosphere.marathon.client.model.v2.GetAppsResponse;
 import mesosphere.marathon.client.model.v2.HealthCheck;
-import mesosphere.marathon.client.model.v2.HealthCheckResults;
 import mesosphere.marathon.client.model.v2.Task;
 
 public class AppStateServer implements Runnable{
@@ -63,30 +61,24 @@ public class AppStateServer implements Runnable{
 							//Add Health Check
 							Integer portIndex = null;
 							Collection<HealthCheck> healthChecks = app.getHealthChecks();
-							Iterator<HealthCheck> checks = healthChecks.iterator();
-							while (checks.hasNext()) {
-								HealthCheck check = checks.next();
-								if (check.getProtocol().equalsIgnoreCase("http") || check.getProtocol().equalsIgnoreCase("https")) {
-									portIndex = check.getPortIndex();
-									break;
-								}
-							}
 							
-							for (Task task : tasks) {
-								
-								Collection<HealthCheckResults> checkResults = task.getHealthCheckResults();
+							portIndex = healthChecks.stream()
+							.filter(protocol -> protocol.getProtocol().equalsIgnoreCase("http") || protocol.getProtocol().equalsIgnoreCase("https"))
+							.findFirst().get().getPortIndex();
 							
-								if (checkResults != null) {
-									HealthCheckResults results = checkResults.iterator().next();
-									Boolean alive = results.getAlive();
-									if (alive){
-										String value = task.getHost().replace("/", "") + ":" + task.getPorts().toArray()[portIndex];
+							if (portIndex != null) {
+								final Integer port = portIndex;
+								tasks.stream().filter(hasNullHealth -> hasNullHealth.getHealthCheckResults() != null)
+								.filter(task -> task.getHealthCheckResults().size() > 0)
+								.filter(task -> task.getHealthCheckResults().size() == task.getHealthCheckResults().stream().filter(checkResult -> checkResult.getAlive()).count())
+								.forEach(aliveTask -> {
+									if (aliveTask != null) {
+										String value = aliveTask.getHost().replace("/", "") + ":" + aliveTask.getPorts().toArray()[port];
 										if (!range.contains(value)) {
 											operations.leftPush(key, value);
 										}
-									}
-								}
-								
+									}						
+								});
 							}
 						}
 					}				
