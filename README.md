@@ -6,25 +6,36 @@ This project is depend on marathon and gorouter
 
 安装单机版的mesos + docker + marathon + zookeeper
 
-<pre>
-0.zookeeper 启动ZK
+#### 0.zookeeper 启动ZK
+```
 zkServer.sh start
-1.mesos master 启动Mesos
+```
+#### 1.mesos master 启动Mesos
+```
 mesos-master --work_dir=/var/lib/mesos --zk=zk://192.168.172.150:2181/mesos --quorum=1
-2.master slaver 如果有启动脚本，最好在mesos的slaver上声明一下IP的hostname
+```
+#### 2.master slaver 如果有启动脚本，最好在mesos的slaver上声明一下IP的hostname
+```
 mesos-slave --master=zk://192.168.172.150:2181/mesos --containerizers=docker,mesos --executor_registration_timeout=5mins
-3.marathon 启动Marathon
+```
+#### 3.marathon 启动Marathon
+```
 /home/jojo/marathon-0.9.0/bin/start --master zk://192.168.172.150:2181/mesos --zk zk://192.168.172.150:2181/marathon
-4.redis 启动Redis
+```
+#### 4.redis 启动Redis
+```
 redis-server redis.conf
-5.gorouter 开启gorouter
+```
+#### 5.gorouter 开启gorouter
+```
 gorouter -c ./example_config/example.yml &
-</pre>
-
+```
+#### 6.hm-dis 开启服务发现 必须保证jdk8 编码使用lamda表达式
+```
+java -jar  & [ourjar.jar]
+```
 AppState 接收并检测存活的app,这里只包含容器化带端口的应用服务，其它的将被抛弃<br />
 TaskState 循环检测redis中的节点是否存活，如果没有，则将其清除<br />
 Evacuator 检测空的无效的应用，并在redis中清除<br />
 
-Bug: task在检测的时候应该去匹配其中的healthchecks,不应该是ip:port. 后续修改<br />
-2015-08-20 修复task的bug,增加了marathon的健康检测功能。所有应用，只要带端口的都需要进行健康检测成功才能写入redis.<br />
-Feature: 多端口的情况
+只检测http或https的应用，至于link的数据库，则会依照相应的Marathon Healthcheck来定
