@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.springframework.data.redis.core.ListOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -17,6 +18,8 @@ import mesosphere.marathon.client.model.v2.HealthCheckResults;
 import mesosphere.marathon.client.model.v2.Task;
 
 public class TaskStateServer implements Runnable {
+	
+	private static final Logger LOG = Logger.getLogger(TaskStateServer.class);
 	
 	private RedisTemplate<String,Object> redisTemplate;
 	
@@ -38,6 +41,9 @@ public class TaskStateServer implements Runnable {
 
 	@Override
 	public void run() {
+		if (LOG.isInfoEnabled()) {
+			LOG.info("Start check alived app instances and remove the dead app instance.");
+		}
 		while(true){
 			try {
 				Set<String> keys = redisTemplate.keys(routerMatch);
@@ -62,12 +68,18 @@ public class TaskStateServer implements Runnable {
 								String hostport = task.getHost() + ":" +task.getPorts().toArray()[port];
 								Collection<HealthCheckResults> results = task.getHealthCheckResults();
 								Boolean isAlive = false;
-								isAlive = results.stream().allMatch(hr -> hr.getAlive());
-								isTaskAliave.put(hostport, isAlive);
+								if (results != null) {
+									isAlive = results.stream().allMatch(hr -> hr.getAlive());
+									isTaskAliave.put(hostport, isAlive);
+								}				
 							});
 						}		
 					} catch (Exception e) {
 						redisTemplate.delete(key);
+						if (LOG.isInfoEnabled()){
+							LOG.debug("Remove the crash key : " + key);
+						}
+						LOG.fatal(e.getMessage(), e);
 					}
 					
 					List<Object> ranges = operations.range(key, 0, -1);
@@ -79,9 +91,15 @@ public class TaskStateServer implements Runnable {
 							if (isTaskAliave.containsKey(task)) {
 								if (isTaskAliave.get(task) == false) {
 									operations.remove(key, i, task);
+									if (LOG.isDebugEnabled()) {
+										LOG.debug("Remove task: " + task);
+									}
 								}
 							}else{
 								operations.remove(key, i, task);
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("Remove task: " + task);
+								}
 							}							
 							i++;
 						}
@@ -90,7 +108,7 @@ public class TaskStateServer implements Runnable {
 				});
 				Thread.sleep(taskTime);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				LOG.fatal(e.getMessage(), e);
 			}
 		}
 	}

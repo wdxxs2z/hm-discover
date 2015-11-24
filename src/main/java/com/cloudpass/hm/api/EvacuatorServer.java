@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import mesosphere.marathon.client.Marathon;
@@ -11,6 +12,8 @@ import mesosphere.marathon.client.model.v2.App;
 import mesosphere.marathon.client.model.v2.GetAppsResponse;
 
 public class EvacuatorServer implements Runnable {
+	
+	private static final Logger LOG = Logger.getLogger(EvacuatorServer.class);
 	
 	private Marathon marathon;
 	
@@ -29,6 +32,9 @@ public class EvacuatorServer implements Runnable {
 
 	@Override
 	public void run() {
+		if (LOG.isInfoEnabled()) {
+			LOG.info("Start find the evacuator dir.");
+		}
 		while(true) {
 			try {
 				List<String> appList = new ArrayList<String>();
@@ -47,6 +53,9 @@ public class EvacuatorServer implements Runnable {
 						String appId = key.substring(key.lastIndexOf("/") + 1).split("\\.")[0];
 						if (appList.contains(appId) == false) {
 							redisTemplate.delete(key);
+							if (LOG.isDebugEnabled()){
+								LOG.debug("Remove the evacuator key : " + key);
+							}
 						}
 					}
 				}else{
@@ -55,11 +64,14 @@ public class EvacuatorServer implements Runnable {
 						
 					}else{
 						redisTemplate.delete(keys);
+						if (LOG.isDebugEnabled()){
+							LOG.debug("Remove the evacuator keys : " + keys);
+						}
 					}					
 				}			
 				Thread.sleep(evaluateTime);
 			} catch (InterruptedException e) {
-				e.printStackTrace();
+				LOG.fatal(e.getMessage(), e);
 			}
 		}
 	}

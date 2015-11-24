@@ -23,21 +23,23 @@ public class HealthManager {
 	
 	private static final Logger LOG = Logger.getLogger(HealthManager.class);
 	
-	private RedisTemplate<String,Object> redisTemplate;
+	private static RedisTemplate<String,Object> redisTemplate;
 	
-	private Marathon marathon;
+	private static Marathon marathon;
 	
-	private String domain;
+	private static String domain;
 	
-	private String prefix;
+	private static String prefix;
 	
-	private String routerMatch;
+	private static String routerMatch;
 	
-	private Integer appStateTime;
+	private static Integer appStateTime;
 	
-	private Integer taskTime;
+	private static Integer taskTime;
 	
-	private Integer evaluateTime;
+	private static Integer evaluateTime;
+	
+	private static String zkPeers;
 	
 	private static ExecutorService executorService;
 
@@ -79,9 +81,10 @@ public class HealthManager {
 		executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
 		
 		final int id = (int) Math.round(Math.random()*100);
-		final String zkUrl = "192.168.49.128:2181";
+		
+		zkPeers = ConfigUtil.getProValue("env.properties", "env.zk.urls");
 				
-		Future<?> future = executorService.submit(new ProcessWatcher(id, zkUrl));
+		Future<?> future = executorService.submit(new ProcessWatcher(id, zkPeers));
 		
 		try {
 			future.get();
