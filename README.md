@@ -1,7 +1,7 @@
 # hm-discover
 This project is depend on marathon and gorouter
 
-> NOTE: 还没有实现组建高可用的部分，后续将继续完善<br />
+> NOTE: 完成高可用，基于zookeeper的leader选举Master<br />
 > gorouter的版本是修改过的，采用redis做为其服务发现路由表<br />
 
 安装单机版的mesos + docker + marathon + zookeeper
@@ -38,4 +38,8 @@ AppState 接收并检测存活的app,这里只包含容器化带端口的应用�
 TaskState 循环检测redis中的节点是否存活，如果没有，则将其清除<br />
 Evacuator 检测空的无效的应用，并在redis中清除<br />
 
-只检测http或https的应用，至于link的数据库，则会依照相应的Marathon Healthcheck来定
+只检测http或https的应用，至于link的数据库，则会依照相应的Marathon Healthcheck来定<br />
+
+#### 任务
+1.只有http的7层服务发现，如果是4层则需要其它组建配合并开发，接下来将完成此部分<br \>
+2.继续优化配置
