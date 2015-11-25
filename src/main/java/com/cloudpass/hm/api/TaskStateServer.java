@@ -79,7 +79,6 @@ public class TaskStateServer implements Runnable {
 						if (LOG.isInfoEnabled()){
 							LOG.debug("Remove the crash key : " + key);
 						}
-						LOG.fatal(e.getMessage(), e);
 					}
 					
 					List<Object> ranges = operations.range(key, 0, -1);

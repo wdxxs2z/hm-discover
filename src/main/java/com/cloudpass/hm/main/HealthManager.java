@@ -1,6 +1,5 @@
 package com.cloudpass.hm.main;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -76,7 +75,7 @@ public class HealthManager {
 	}
 	
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		
 		executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 4);
 		

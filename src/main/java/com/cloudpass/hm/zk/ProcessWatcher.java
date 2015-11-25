@@ -8,7 +8,9 @@ import org.apache.log4j.Logger;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
 import org.apache.zookeeper.Watcher.Event.EventType;
+import org.springframework.boot.SpringApplication;
 
+import com.cloudpass.hm.controller.MarathonEventBusController;
 import com.cloudpass.hm.main.HealthManager;
 
 public class ProcessWatcher implements Runnable{
@@ -66,6 +68,10 @@ public class ProcessWatcher implements Runnable{
 			if(LOG.isInfoEnabled()) {
 				LOG.info("[Process: " + id + "] I am the new leader!");
 			}
+			
+			//start spring-boot and start pool searcher
+			SpringApplication.run(MarathonEventBusController.class);
+			
 			new HealthManager().hmService();
 		} else {
 			final String watchedNodeShortPath = childNodePaths.get(index - 1);

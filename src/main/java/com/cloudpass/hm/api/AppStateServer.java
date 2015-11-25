@@ -49,6 +49,7 @@ public class AppStateServer implements Runnable{
 
 	@Override
 	public void run() {
+		
 		if (LOG.isInfoEnabled()) {
 			LOG.info("Start collect app state and store.");
 		}
