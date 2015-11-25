@@ -40,6 +40,10 @@ Evacuator 检测空的无效的应用，并在redis中清除<br />
 
 只检测http或https的应用，至于link的数据库，则会依照相应的Marathon Healthcheck来定<br />
 
-#### 任务
-1.只有http的7层服务发现，如果是4层则需要其它组建配合并开发，接下来将完成此部分<br \>
-2.继续优化配置
+#### 功能补充
+程序本身只轮询的检测marathon，但后期将完善根据事件注册回掉的机制写gorouter<br />
+开启marathon的事件回调机制:
+```
+./start --master zk://192.168.49.128:2181/mesos --zk zk://192.168.49.128:2181/marathon --event_subscriber http_callback --http_endpoints http://192.168.49.1:8080/event_callback
+```
+MarathonEventBusController 处理具体的事件，由于事件比较零散，所以后续在做这部分功能的补充，目前只轮询和打印事件.
